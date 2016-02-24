@@ -22,4 +22,5 @@ package com.github.mboogerd.ccrdt
 package object syntax {
   object all extends AllSyntax
   object joinSyntax extends JoinSyntax
+  object semilatticeSyntax extends SemilatticeSyntax
 }

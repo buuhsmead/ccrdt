@@ -65,6 +65,7 @@ object GenHelper {
 
   /**
     * Choses at least one elements, up to the entire set, as a subset of the given set
+    *
     * @param set
     * @tparam T
     * @return
@@ -75,5 +76,22 @@ object GenHelper {
       some <- Gen.someOf(set)
       one <- Gen.oneOf(set.toSeq)
     } yield (some :+ one).toSet
+  }
+
+  /**
+    * Fold-flatmaps the supplied function 'apply' an arbitrary number of times, given the supplied input 'initial'
+    * TODO: Looks like Kleisli could cleanup some things potentially?
+    * @param initial
+    * @param apply The function
+    * @tparam T
+    * @return
+    */
+  def foldGen[T](initial: T)(apply: T => Gen[T]): Gen[T] = {
+    Gen.oneOf(
+      Gen.const(initial),
+      Gen.lzy(for {
+        applied <- apply(initial)
+        reapplied <- foldGen(applied)(apply)
+      } yield reapplied))
   }
 }

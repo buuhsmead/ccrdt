@@ -18,3 +18,4 @@ package com.github.mboogerd.ccrdt.syntax
 
 trait AllSyntax
     extends JoinSyntax
+    with SemilatticeSyntax
