@@ -14,14 +14,14 @@ scalaVersion := "2.11.7"
 
 organization := "Merlijn Boogerd"
 
-crossScalaVersions := Seq("2.10.6", "2.11.7")
-
 val akkaVersion = "2.4.1"
 
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.0.0-M9" % "test",
   "org.scalacheck" %% "scalacheck" % "1.12.5",
-  "org.spire-math" %% "cats" % "0.3.0",
+  "org.typelevel" %% "cats-core" % "0.4.1",
+  "org.typelevel" %% "cats-laws" % "0.4.1",
+  "org.typelevel" %% "cats-macros" % "0.4.1",
 
   "com.typesafe.akka" %% "akka-actor" % akkaVersion,
   "com.typesafe.akka" %% "akka-distributed-data-experimental" % akkaVersion,
