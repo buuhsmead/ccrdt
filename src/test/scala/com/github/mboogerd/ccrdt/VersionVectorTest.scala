@@ -21,6 +21,7 @@ import cats.Order
 import cats.Order._
 import cats.std.long._
 import com.github.mboogerd.GenHelper._
+import com.github.mboogerd.TestSpec
 import com.github.mboogerd.ccrdt.syntax.all._
 import org.scalacheck.Arbitrary._
 import org.scalacheck.{Arbitrary, Gen}
@@ -29,16 +30,12 @@ import org.scalatest.{FlatSpecLike, Matchers}
 
 import scala.collection.JavaConversions._
 import scala.collection.immutable.SortedMap
-
 /**
   *
   */
 object VersionVectorTest {
 
   /* ADT evidence */
-  implicit val stringOrder: Order[String] = new Order[String] {
-    override def compare(x: String, y: String): Int = x compareTo y
-  }
 
   implicit def sortedMapJSL[K: Order, V: Order]: JoinSemilattice[SortedMap[K, V]] = new JoinSemilattice[SortedMap[K, V]] {
     val keyOrder = implicitly[Order[K]].compare _
@@ -129,7 +126,7 @@ object VersionVectorTest {
 
 }
 
-class VersionVectorTest extends FlatSpecLike with Matchers with GeneratorDrivenPropertyChecks {
+class VersionVectorTest extends TestSpec {
 
   import VersionVectorTest._
 

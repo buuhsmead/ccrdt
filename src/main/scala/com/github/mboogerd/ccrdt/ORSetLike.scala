@@ -106,20 +106,6 @@ object ORSet {
     override def eqv(x: ORSetLike[S, P], y: ORSetLike[S, P]): Boolean = x.data == y.data
   }
 
-  implicit class Joinable[T](set1: Set[T]) {
-    def join(set2: Set[T]) = new {
-      def on[K](prop: T => K): Set[(K, Set[T], Set[T])] = {
-        val lhs = set1.groupBy(prop)
-        val rhs = set2.groupBy(prop)
-        (lhs.keySet & rhs.keySet) map (key => (key, lhs(key), rhs(key)))
-      }
-    }
-  }
-
-  implicit class Crossable[X](xs: Set[X]) {
-    def cross[Y](ys: Set[Y]) = for {x <- xs; y <- ys} yield (x, y)
-  }
-
   type UID[U] = () => U
 }
 
