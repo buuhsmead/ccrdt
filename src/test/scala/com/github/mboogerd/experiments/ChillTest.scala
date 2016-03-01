@@ -17,7 +17,6 @@
 package com.github.mboogerd.experiments
 
 import java.io.{ByteArrayOutputStream, ObjectOutputStream, Serializable}
-import java.util.Base64
 
 import com.github.mboogerd.TestSpec
 import com.twitter.chill._
@@ -35,10 +34,8 @@ object ChillTest {
     val oos = new ObjectOutputStream(baos)
     oos.writeObject( o )
     oos.close()
-    toBase64(baos.toByteArray)
+    baos.toByteArray.mkString
   }
-
-  def toBase64(baos: Array[Byte]): String = Base64.getEncoder.encodeToString(baos)
 }
 class ChillTest extends TestSpec {
 
@@ -55,7 +52,6 @@ class ChillTest extends TestSpec {
   "KryoPool" should "allow serializing a function" in {
     val output = new Output(256, -1)
     val bytes = kryo.toBytesWithClass(f)
-    println("Encoded function1: " + toBase64(bytes))
     bytes should not have length(0)
   }
 

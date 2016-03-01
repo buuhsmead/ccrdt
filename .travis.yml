@@ -1,5 +1,11 @@
 language: scala
+
 scala:
    - 2.11.7
+
+jdk:
+  - oraclejdk7
+  - openjdk7
+
 after_success:
   - bash <(curl -s https://codecov.io/bash)
