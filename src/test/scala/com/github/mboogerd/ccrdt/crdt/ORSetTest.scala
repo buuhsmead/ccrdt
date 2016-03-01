@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-package com.github.mboogerd.ccrdt
+package com.github.mboogerd.ccrdt.crdt
 
 import algebra.laws.LatticeLaws
 import com.github.mboogerd.CatsSpec
-import com.github.mboogerd.ccrdt.ORSet._
+import com.github.mboogerd.ccrdt.crdt.ORSet._
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Shrink._
 import org.scalacheck.{Arbitrary, Gen, Shrink}
 
 import scala.collection.JavaConversions._
 import scala.util.Random
-
 /**
  * Created by merlijn on 04/10/15.
  */

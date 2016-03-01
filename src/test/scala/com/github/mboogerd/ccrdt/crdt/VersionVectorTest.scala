@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.mboogerd.ccrdt
+package com.github.mboogerd.ccrdt.crdt
 
 import algebra.lattice.JoinSemilattice
 import cats.Order
@@ -22,11 +22,10 @@ import cats.Order._
 import cats.std.long._
 import com.github.mboogerd.GenHelper._
 import com.github.mboogerd.TestSpec
+import com.github.mboogerd.ccrdt._
 import com.github.mboogerd.ccrdt.syntax.all._
 import org.scalacheck.Arbitrary._
 import org.scalacheck.{Arbitrary, Gen}
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
-import org.scalatest.{FlatSpecLike, Matchers}
 
 import scala.collection.JavaConversions._
 import scala.collection.immutable.SortedMap

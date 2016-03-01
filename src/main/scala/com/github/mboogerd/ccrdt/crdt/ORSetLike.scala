@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.github.mboogerd.ccrdt
+package com.github.mboogerd.ccrdt.crdt
 
 import algebra.CommutativeGroup
 import algebra.lattice.JoinSemilattice
 import cats._
 import cats.implicits._
-import com.github.mboogerd.ccrdt.ORSet._
+import com.github.mboogerd.ccrdt._
+import com.github.mboogerd.ccrdt.crdt.ORSet._
 
 import scala.language.reflectiveCalls
-
 /**
   * Created by merlijn on 03/10/15.
  *
@@ -122,6 +122,8 @@ trait FunctorORSetLike[S, U] extends Functor[({type λ[α] = FunctorORSetLike[α
 
 
 case class ORSet[S, U](data: Set[OREntry[S, U]], uniqueGen: UID[U]) extends ORSetLike[S, U] {
+
+  import ORSet._
 
   assert(data.map(_.elem).size == data.size, "ORSet data may not contain OREntries with duplicate `elem` attribute values")
 

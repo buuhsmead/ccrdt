@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.mboogerd.ccrdt
+package com.github.mboogerd.ccrdt.crdt
 
 import cats.Order
 import cats.Order._

@@ -20,7 +20,7 @@ import algebra.lattice.JoinSemilattice
 import cats.Order
 import cats.Order._
 import cats.implicits._
-import com.github.mboogerd.ccrdt.VersionVector
+import com.github.mboogerd.ccrdt.crdt.VersionVector
 
 import scala.annotation.tailrec
 import scala.collection.immutable.SortedMap

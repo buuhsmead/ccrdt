@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-package com.github.mboogerd.ccrdt
+package com.github.mboogerd.ccrdt.crdt
 
 import algebra.lattice.JoinSemilattice
 import cats.Order
 import cats.Order._
-import com.github.mboogerd.ccrdt.DeltaORSet._
+import com.github.mboogerd.ccrdt._
+import com.github.mboogerd.ccrdt.crdt.DeltaORSet._
 import com.github.mboogerd.ccrdt.syntax.semilatticeSyntax._
 
-import scala.collection.generic.CanBuildFrom
 import scala.collection.immutable.SortedMap
-import scala.collection.mutable
 
 object DeltaORSet {
 

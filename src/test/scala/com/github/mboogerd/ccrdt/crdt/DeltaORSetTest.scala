@@ -14,23 +14,18 @@
  * limitations under the License.
  */
 
-package com.github.mboogerd.ccrdt
-
-import java.util
+package com.github.mboogerd.ccrdt.crdt
 
 import algebra.lattice.JoinSemilattice
 import cats.Order
-import cats.Order._
 import cats.implicits._
 import com.github.mboogerd.GenHelper._
 import com.github.mboogerd.TestSpec
-import com.github.mboogerd.ccrdt.DeltaORSet._
+import com.github.mboogerd.ccrdt.crdt.DeltaORSet._
 import org.scalacheck.Arbitrary._
 import org.scalacheck.{Arbitrary, Gen}
-import scala.collection.JavaConversions
+
 import scala.collection.JavaConversions._
-import scala.collection.immutable.{SortedSet, SortedMap}
-import JavaConversions._
 /**
   *
   */
