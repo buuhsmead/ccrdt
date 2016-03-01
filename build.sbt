@@ -26,7 +26,9 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % akkaVersion,
   "com.typesafe.akka" %% "akka-distributed-data-experimental" % akkaVersion,
   "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test",
-  "com.typesafe.akka" %% "akka-stream-experimental" % "2.0.2"
+  "com.typesafe.akka" %% "akka-stream-experimental" % "2.0.2",
+
+  "com.twitter" %% "chill" % "0.8.0"
 )
 
 resolvers += Resolver.sonatypeRepo("releases")
