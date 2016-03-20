@@ -16,6 +16,8 @@
 
 package com.github.mboogerd.ccrdt.crdt
 
+import java.util
+
 import algebra.lattice.JoinSemilattice
 import cats.Order
 import cats.Order._
@@ -24,6 +26,7 @@ import com.github.mboogerd.ccrdt.crdt.DeltaORSet._
 import com.github.mboogerd.ccrdt.syntax.semilatticeSyntax._
 
 import scala.collection.immutable.SortedMap
+import scala.collection.JavaConversions._
 
 object DeltaORSet {
 
@@ -37,6 +40,12 @@ object DeltaORSet {
   type MapEntries[S, N] = (S, Entries[S, N])
 
 
+  /**
+    * Evidence that a Delta Observed-Removed set is a Join Semilattice
+    * @tparam S
+    * @tparam N
+    * @return
+    */
   implicit def jslDeltaORSet[S: Order, N: Order]: JoinSemilattice[DeltaORSet[S, N]] = new JoinSemilattice[DeltaORSet[S, N]] {
     val joinMap = implicitly[JoinSemilattice[SortedMap[S, (Set[ObservedEntry[N]], Set[RemovedEntry[N]])]]].join _
     val joinVV = implicitly[JoinSemilattice[VersionVector[N]]].join _
@@ -52,13 +61,31 @@ object DeltaORSet {
     VersionVector[N](SortedMap.empty[N, Long]))
 }
 
+/**
+  * This is an implementation of the algorithms described in:
+  * `A scalable conflict-free replicated set data type` - ISBN: 9780769550008
+  *
+  * @param data The initial dataset
+  * @param versionVector The initial version vector
+  * @param ev$1 An ordering relation for the contained type
+  * @param ev$2 An ordering relation for the node type in the version vector
+  * @tparam S The contained type for this set
+  * @tparam N The type of node identifier used in the version vector
+  */
 case class DeltaORSet[S: Order, N: Order](private[ccrdt] val data: SortedMap[S, (Set[ObservedEntry[N]], Set[RemovedEntry[N]])],
-                                          private[ccrdt] val versionVector: VersionVector[N]) extends Traversable[S] {
+                                          private[ccrdt] val versionVector: VersionVector[N]) extends java.lang.Iterable[S] {
 
   private val emptyMutation = (Set.empty[ObservedEntry[N]], Set.empty[RemovedEntry[N]])
 
   type Repr[T, V] = DeltaORSet[T, V]
 
+  /**
+    * Add `elem` to this set under the name of `node`
+    *
+    * @param node
+    * @param elem
+    * @return A new Delta ORSet with `elem` added
+    */
   def add(node: N, elem: S): Repr[S, N] = {
     val newVV = versionVector + node
     val addition = ObservedEntry(node, newVV.version(node))
@@ -68,7 +95,13 @@ case class DeltaORSet[S: Order, N: Order](private[ccrdt] val data: SortedMap[S, 
     DeltaORSet(newData, newVV)
   }
 
-
+  /**
+    * Removes `elem` from this set under the name of `node`
+    *
+    * @param node
+    * @param elem
+    * @return A new Delta ORSet with `elem` removed
+    */
   def remove(node: N, elem: S): Repr[S, N] = {
     val newVV = versionVector + node
     val newClock = versionVector.version(node) + 1
@@ -79,10 +112,23 @@ case class DeltaORSet[S: Order, N: Order](private[ccrdt] val data: SortedMap[S, 
     DeltaORSet(newData, newVV)
   }
 
+  /**
+    * Removes all supplied elements from this set
+    *
+    * @param node
+    * @param elems
+    * @return A new Delta ORSet with all of `elems` removed
+    */
   def removeAll(node: N, elems: Traversable[S]): Repr[S, N] =
     elems.foldLeft(this) { case (cleaner, remove) => cleaner.remove(node, remove) }
 
 
+  /**
+    * Whether the given `elem` is currently in this set
+    *
+    * @param elem
+    * @return true if there exist
+    */
   def contains(elem: S): Boolean = {
     val (additions, removals) = mutations(elem)
     !undefined(additions, removals)
@@ -104,6 +150,12 @@ case class DeltaORSet[S: Order, N: Order](private[ccrdt] val data: SortedMap[S, 
     DeltaORSet(mergedDiff ++ localOnly, mergedVVs)
   }
 
+  /**
+    * The additions and removals registered for the given `elem`
+    *
+    * @param elem
+    * @return
+    */
   protected def mutations(elem: S): (Set[ObservedEntry[N]], Set[RemovedEntry[N]]) = data.getOrElse(elem, emptyMutation)
 
   /**
@@ -118,10 +170,13 @@ case class DeltaORSet[S: Order, N: Order](private[ccrdt] val data: SortedMap[S, 
       obs.addReplica == rem.addReplica && obs.addVersion == rem.addVersion))
   }
 
-  override def foreach[U](f: (S) => U): Unit = {
-    data
-      .filter { case (s, (additions, removals)) => !undefined(additions, removals) }
-      .map { case (s, _) => s }
-      .foreach(f)
-  }
+  /**
+    * Here we explicitly expose the Java Iterator interface, as the Scala one will enrich the namespace with methods
+    * that we should expose with a different signature for CRDTs.
+    * @return
+    */
+  override def iterator(): util.Iterator[S] = data
+    .filter { case (s, (additions, removals)) => !undefined(additions, removals) }
+    .map { case (s, _) => s }
+    .toIterator
 }

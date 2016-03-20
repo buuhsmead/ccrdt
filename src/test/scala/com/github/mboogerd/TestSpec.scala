@@ -17,13 +17,25 @@
 package com.github.mboogerd
 
 import cats._
-import org.scalacheck.{Gen, Arbitrary}
+import org.scalacheck.{Arbitrary, Gen}
+import org.scalatest.enablers.Containing
 import org.scalatest.{FlatSpecLike, Matchers}
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
-
+import scala.collection.JavaConversions._
 /**
   *
   */
 trait TestSpec extends FlatSpecLike with Matchers with GeneratorDrivenPropertyChecks {
 
+
+  implicit def containingIterator[T]: Containing[java.lang.Iterable[T]] = new Containing[java.lang.Iterable[T]]{
+    override def contains(container: java.lang.Iterable[T], element: Any): Boolean =
+      container.toIterator.contains(element)
+
+    override def containsOneOf(container: java.lang.Iterable[T], elements: Seq[Any]): Boolean =
+      container.toSet.intersect(elements.toSet).size == 1 // <- Does not exit early once |intersection| > 1 is established
+
+    override def containsNoneOf(container: java.lang.Iterable[T], elements: Seq[Any]): Boolean =
+      container.toIterator.collectFirst{case elem => elements.contains(elem) }.isEmpty
+  }
 }

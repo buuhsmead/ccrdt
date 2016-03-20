@@ -16,6 +16,8 @@
 
 package com.github.mboogerd.ccrdt.crdt
 
+import java.lang.Iterable
+
 import algebra.lattice.JoinSemilattice
 import cats.Order
 import cats.implicits._
@@ -24,6 +26,7 @@ import com.github.mboogerd.TestSpec
 import com.github.mboogerd.ccrdt.crdt.DeltaORSet._
 import org.scalacheck.Arbitrary._
 import org.scalacheck.{Arbitrary, Gen}
+import org.scalatest.enablers.Containing
 
 import scala.collection.JavaConversions._
 /**
@@ -31,51 +34,29 @@ import scala.collection.JavaConversions._
   */
 object DeltaORSetTest {
 
+  // Add a random element at a random node to the given set
   def addRandom[S: Order : Arbitrary, N: Order : Arbitrary](deltaORSet: DeltaORSet[S, N]): Gen[DeltaORSet[S, N]] = for {
     node <- arbitrary[N]
     elem <- arbitrary[S]
   } yield deltaORSet.add(node, elem)
 
+  // Remove a randomly chosen element from this set at a random node
   def removeSome[S: Order : Arbitrary, N: Order : Arbitrary](deltaORSet: DeltaORSet[S, N]): Gen[DeltaORSet[S, N]] = for {
     node <- arbitrary[N]
     some <- Gen.someOf(deltaORSet.data.keySet)
   } yield deltaORSet.removeAll(node, some)
 
+  // Add (80% chance) or remove (20% chance) an arbitrary element
   def modifyDeltaORSet[S: Order : Arbitrary, N: Order : Arbitrary](deltaORSet: DeltaORSet[S, N]): Gen[DeltaORSet[S, N]] =
     Gen.frequency((8, addRandom(deltaORSet)), (2, removeSome(deltaORSet)))
 
-
+  // Generate a complete delta orset by iteratively adding or removing
   implicit def arbitraryDeltaORSet[S: Order : Arbitrary, N: Order : Arbitrary](implicit deltaORSet: DeltaORSet[S, N]): Arbitrary[DeltaORSet[S, N]] =
     Arbitrary(foldGen(deltaORSet)(modifyDeltaORSet[S, N]))
-//
-//  def truncateVV[N: Order](vv: VersionVector[N]): Gen[VersionVector[N]] = {
-//    val reducedClocksGen = vv.elems.map {
-//      case ((node, clock)) => Gen.choose(0l, clock) map (c => node -> c)
-//    }
-//
-//    val genClocks: Gen[util.ArrayList[(N, Long)]] = Gen.sequence(reducedClocksGen)
-//    val genCleanClocks = genClocks map (_.filter(_._2 > 0))
-//    genCleanClocks map (clockMapping => VersionVector(SortedMap[N, Long](clockMapping: _*)))
-//  }
-//
-//  def truncateData[S: Order, N: Order](deltaORSetData: SortedMap[S, (Set[ObservedEntry[N]], Set[RemovedEntry[N]])])
-//                                      (newVV: VersionVector[N]): SortedMap[S, (Set[ObservedEntry[N]], Set[RemovedEntry[N]])] = {
-//    val reducedOREntries = deltaORSetData.map{ case (key, (observed, removed)) => (key, (
-//        observed.filter{ case ObservedEntry(replica, version) => version <= newVV.version(replica)},
-//        removed.filter{ case RemovedEntry(addReplica, addVersion, remReplica, remVersion) =>
-//          addVersion <= newVV.version(addReplica) || remVersion <= newVV.version(remReplica)
-//        }
-//      ))}(sortedMapBuilder[S, (Set[ObservedEntry[N]], Set[RemovedEntry[N]])])
-//
-//    reducedOREntries.filter{ case (_, (obs, rem)) => obs.nonEmpty && rem.nonEmpty}
-//  }
-//
-//  def truncateDORSet[S: Order, N: Order](deltaORSet: DeltaORSet[S, N]): Gen[DeltaORSet[S, N]] = {
-//    val newVV = truncateVV[N](deltaORSet.versionVector)
-//    newVV map (vv => new DeltaORSet[S, N](truncateData(deltaORSet.data)(vv), vv))
-//  }
+
 
   case class TestEntry(data: String)
+
   case class TestNode(address: String)
 
   implicit val orderTestEntry: Order[TestEntry] = new Order[TestEntry] {
@@ -107,8 +88,8 @@ class DeltaORSetTest extends TestSpec {
     var emptyDORSet = DeltaORSet.apply[String, String]()
 
     forAll(arbitrary[String], arbitrary[String]) { case (node, value) =>
-      emptyDORSet = emptyDORSet.add(node, value)
-      emptyDORSet should contain(value)
+      val nonEmptyDORSet = emptyDORSet.add(node, value)
+      nonEmptyDORSet should contain(value)
     }
   }
 
@@ -133,12 +114,22 @@ class DeltaORSetTest extends TestSpec {
     }
   }
 
-  it should "have a merge that for single node operations behaves equivalent to set-union" in {
+  it should "have a merge implementation that corresponds to Join Semilattice - Least Upperbound" in {
     implicit val arbTestEntry: Arbitrary[TestEntry] = Arbitrary(arbitrary[String] map (TestEntry(_)))
     implicit val arbTestNode: Arbitrary[TestNode] = Arbitrary(arbitrary[String] map (TestNode(_)))
     implicit val emptyDeltaOrSet: DeltaORSet[TestEntry, TestNode] = DeltaORSet[TestEntry, TestNode]()
     val genDORSet = arbitrary[DeltaORSet[TestEntry, TestNode]]
 
+    // It would be interesting to make use of Cats' laws to test the merge function. However, this takes as input
+    // a single generator, independently invoked twice to get a pair whose merge can be tested for associativity,
+    // commutativity and idempotence. The trouble here is that a Delta ORSet is not a true Join Semilattice;
+    // its properties only hold for (delta-orset) pairs whose version-vectors are free of 'collisions' (i.e. there are
+    // no two different actions identified using the same node-clock entry).
+    //
+    // Guaranteeing two 'collision-free' version vectors seems a bit of a hassle; instead, we generate a (possibly
+    // empty) base DORSet, draw two disjoint sets of node identifiers, and evolve the base once for each such node-set.
+    // Then, we compare whether the speed-optimized merge behaves equivalent to the the easier-to-verify
+    // join-semilattice join implementation.
     val disjointGen = for {
       base <- genDORSet
       nodes = base.versionVector.elems.keySet
@@ -152,7 +143,7 @@ class DeltaORSetTest extends TestSpec {
       remainingMore <- Gen.nonEmptyContainerOf(arbitrary[TestNode])
 
       // compute the final nodesets
-      firstNodes = (all ++ remainingMore).toSeq
+      firstNodes = (all -- remainingMore).toSeq
       secondNodes = remainingNodes ++ remainingMore
 
       // create two new orsets from mutating the base on the two sets of nodes
