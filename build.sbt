@@ -10,18 +10,22 @@ name := "Computational CRDTs"
 
 version := "1.0"
 
-scalaVersion := "2.11.7"
+scalaVersion := "2.11.8"
 
 organization := "Merlijn Boogerd"
 
 val akkaVersion = "2.4.1"
+val catsVersion = "0.4.1"
+val spireVersion = "0.3.1"
 
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.0.0-M9" % "test",
   "org.scalacheck" %% "scalacheck" % "1.12.5",
-  "org.typelevel" %% "cats-core" % "0.4.1",
-  "org.typelevel" %% "cats-laws" % "0.4.1",
-  "org.typelevel" %% "cats-macros" % "0.4.1",
+  "org.typelevel" %% "cats-core" % catsVersion,
+  "org.typelevel" %% "cats-laws" % catsVersion,
+  "org.typelevel" %% "cats-macros" % catsVersion,
+  "org.spire-math" %% "spire" % "0.11.0",
+  "com.chuusai" %% "shapeless" % "2.3.0",
 
   "com.typesafe.akka" %% "akka-actor" % akkaVersion,
   "com.typesafe.akka" %% "akka-distributed-data-experimental" % akkaVersion,
@@ -56,7 +60,7 @@ scalacOptions := Seq(
   "-language:implicitConversions",
   "-unchecked",
   "-Xfatal-warnings",
-  "-Xlint",
+//  "-Xlint",
   "-Yinline-warnings",
   "-Yno-adapted-args",
   "-Ywarn-dead-code",

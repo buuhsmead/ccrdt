@@ -36,6 +36,6 @@ trait TestSpec extends FlatSpecLike with Matchers with GeneratorDrivenPropertyCh
       container.toSet.intersect(elements.toSet).size == 1 // <- Does not exit early once |intersection| > 1 is established
 
     override def containsNoneOf(container: java.lang.Iterable[T], elements: Seq[Any]): Boolean =
-      container.toIterator.collectFirst{case elem => elements.contains(elem) }.isEmpty
+      container.toIterator.collectFirst{case elem if elements.contains(elem) => true }.isEmpty
   }
 }
